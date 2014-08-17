@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Language" content="ja" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>stg</title>
+<script>
+
+if (!document.createElement('canvas').getContext) { location.href="error.html" }
+</script>
+<style type="text/css"><!--
+canvas{border:solid 1px white;}
+*{color:white;}
+--></style>
+
+</head>
+
+<script type="text/javascript" src="./lib/vector.js"></script>
+<script type="text/javascript" src="./lib/geono.js"></script>
+<script type="text/javascript" src="./lib/util.js"></script>
+<script type="text/javascript" src="./lib/rastono.js"></script>
+<script type="text/javascript" src="./lib/rastc2d.js"></script>
+<script type="text/javascript" src="./lib/ono3d.js"></script>
+<script type="text/javascript" src="./lib/onophy.js"></script>
+<script type="text/javascript" src="./lib/o3o.js"></script>
+<script type="text/javascript" src="./lib/objman.js"></script>
+<script type="text/javascript" src="./lib/mmd.js"></script>
+<script type="text/javascript" src="./lib/mqo.js"></script>
+<script type="text/javascript" src="./lib/rastgl.js"></script>
+<script type="text/javascript" src="./main.js"></script>
+
+<script type="text/javascript">
+
+var global_param={};
+global_param.drawmethod=9;
+global_param.fps=30;
+
+var onloadfunc=function(event){
+
+	Util.init();
+	global_param.enableGL=!Rastgl.init(document.getElementById("maincanvas2"));
+
+	Main.init()
+
+}
+</script>
+<body bgcolor="black" style="text-align:center;font-size:small;" onLoad="onloadfunc(event)">
+<div id="cons" style="color:gray;"></div>
+
+<div style="position:relative;width:100%;height:100%;display:table;">
+<div style="width:100%;height:100%;display:table-cell;vertical-align:middle;" id="inputarea" align="center">
+<div>
+	<br>
+	<br>
+	<br>
+	<canvas id="maincanvas" width="216" height="384" >
+	</canvas>
+	<span style="margin:40px;"></span>
+	<canvas id="maincanvas_R" width="216" height="384" >
+	</canvas>
+	<canvas id="maincanvas2" width="216" height="384">
+	</canvas>
+	SCORE<span id="score"></span>
+</div>
+</body>
+</html>
+
