@@ -691,7 +691,7 @@ var oSystem=function(o,m,p){
 		pJiki=objman.createObj(objJiki);
 		Vec3.set(pJiki.p,0,-50,0);
 		pJiki.hp=3;
-		score=0;
+		score=1000;
 		break;
 	case Objman.MOVE:
 		camerap[0]=pJiki.p[0]*0.25;
@@ -712,6 +712,7 @@ var oSystem=function(o,m,p){
 				if(!obj.flg)continue
 				objman.deleteObj(obj);
 			}
+			post();
 			objman.createObj(objTitle);
 		}
 		break;
@@ -794,11 +795,18 @@ var mainfunc=(function(){
 		}
 		ono3d.render(Util.ctx);
 		Util.ctx.putImageData(imagedata,0,0);
-		var scorestr=score+"<BR>";
+		var scorestr=global_param["id"] +"<BR>" + score+"<BR>";
 		if(scoreboard){
 			for(i=0;i<scoreboard.length;i++){
 				var s=scoreboard[i];
-				scorestr+=s.name +":" + s.score + "<br>"; 
+				if(s.id==global_param["id"]){
+					scorestr+="<span style='color:red;font-weight:bold;'>";
+					scorestr+=s.name +":" + s.score; 
+					scorestr+="</span>";
+				}else{
+					scorestr+=s.name +":" + s.score; 
+				}
+				scorestr+="<br>"; 
 			}
 		}
 		elemScore.innerHTML=scorestr;
@@ -837,9 +845,67 @@ var mainfunc=(function(){
 		if(objcube)objman.deleteObj(objcube)
 	}
 
+	var post=function(arr){
+		document.cookie="nm="+document.getElementById("name").value;
+		Util.load("./score.php"
+			+"?id="+global_param["id"]
+			+"&name=" +document.getElementById("name").value
+			+"&score="+score
+			,function(data){
+			var arr=data.split("\n");
+			scoreboard= new Array();
+			for(var i=0;i<arr.length;i++){
+				var arr2=arr[i].split(",");
+				if(arr2.length<=2){continue};
+				var obj={}
+				obj.id=arr2[0];
+				obj.name=arr2[1];
+				obj.score=arr2[2];
+				scoreboard.push(obj);
+			}
+		});
+		//var form=document.createElement("form");
+		//document.getElementById("hid_id").value = global_param["id"];
+		//document.getElementById("hid_name").value =document.getElementById("name").value;
+		//document.getElementById("hid_score").value = score;
+		//form.submit();
+	}
 	ret.init=function(){
+		var cookie=document.cookie;
+		var args;
+		var i;
+		if(cookie != null){
+			args=cookie.split(";")
+			for(i=args.length;i--;){
+				args[i]=args[i].replace(/^\s+|\s+$/g, "");
+				var arg=args[i].split("=")
+				if(arg.length >1){
+					if(!isNaN(arg[1]) && arg[1]!=""){
+						global_param[arg[0]] = +arg[1]
+					}else{
+						global_param[arg[0]] = arg[1]
+					}
+				}else{
+					global_param["no"]=arg[0]
+				}
+			}
+		}
+		if(global_param["id"] == null){
+			var id="";
+			var chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+			var charslen=chars.length;
+			for(i=30;i--;){
+				id+=chars.charAt(rnd()*charslen|0);
+			}
+			document.cookie="id="+id;
+			global_param["id"]=id;
+		}
+		if(global_param["nm"]!=null){
+			document.getElementById("name").value=global_param["nm"];
+		}
+
 		var url=location.search.substring(1,location.search.length)
-		var args=url.split("&")
+		args=url.split("&")
 
 		for(i=args.length;i--;){
 			var arg=args[i].split("=")
@@ -857,7 +923,7 @@ var mainfunc=(function(){
 		canvasr=document.getElementById("maincanvas_R");
 		elemScore=document.getElementById("score");
 		ctxr=canvasr.getContext("2d");
-		Util.load("./score",function(data){
+		Util.load("./score?"+rnd(),function(data){
 			var arr=data.split("\n");
 			scoreboard= new Array();
 			for(var i=0;i<arr.length;i++){

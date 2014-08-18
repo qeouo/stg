@@ -14,8 +14,9 @@
 if (!document.createElement('canvas').getContext) { location.href="error.html" }
 </script>
 <style type="text/css"><!--
+html,body{height:100%;margin:0px;padding:0px;}
 canvas{border:solid 1px white;}
-*{color:white;}
+div{color:white;}
 --></style>
 
 </head>
@@ -51,22 +52,24 @@ var onloadfunc=function(event){
 </script>
 <body bgcolor="black" style="text-align:center;font-size:small;" onLoad="onloadfunc(event)">
 <div id="cons" style="color:gray;"></div>
-
-<div style="position:relative;width:100%;height:100%;display:table;">
-<div style="width:100%;height:100%;display:table-cell;vertical-align:middle;" id="inputarea" align="center">
-<div>
-	<br>
-	<br>
-	<br>
-	<canvas id="maincanvas" width="216" height="384" >
+<div style="width:70%;height:80%;float:left;" id="inputarea" align="center">
+	<canvas id="maincanvas_R" width="216" height="384" >
 	</canvas>
 	<span style="margin:40px;"></span>
-	<canvas id="maincanvas_R" width="216" height="384" >
+	<canvas id="maincanvas" width="216" height="384" >
 	</canvas>
 	<canvas id="maincanvas2" width="216" height="384">
 	</canvas>
-	SCORE<span id="score"></span>
 </div>
+<div style="float:left;width:auto;">
+	NAME ENTRY<input type="text" id="name" value="HOGE"><br>
+	<span id="score"></span>
+</div>
+<form action="./score.php"  method="GET" id="frm" accept-charset="utf-8">
+<input type="hidden" name="id" id="hid_id">
+<input type="hidden" name="score" id="hid_score">
+<input type="hidden" name="name" id="hid_name">
+</form>
 </body>
 </html>
 
