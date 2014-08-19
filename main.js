@@ -15,13 +15,8 @@ var
 var score=0;
 var seBomb=document.createElement("audio");
 seBomb.src="./data/bomb.wav";
-var seBomb2=document.createElement("audio");
-seBomb2.src="./data/bomb.wav";
 var seBullet=document.createElement("audio");
 seBullet.src="./data/bullet.wav";
-var bgm=document.createElement("audio");
-bgm.src="./data/stage.mp3";
-bgm.loop=true;
 var scoreboard="";
 var elemScore=null;
 var scrollSpeed=-4;
@@ -221,6 +216,7 @@ var oExplosion2 = function(o,m,p){
 	switch(m){
 	case Objman.CREATE:
 		o.kind=0;
+		seBomb.pause();
 		seBomb.currentTime=0;
 		seBomb.play();
 		break;
@@ -643,8 +639,8 @@ var oStage= function(o,m,p){
 		//Vec3.set(camerap,0,0,0);
 		//Vec3.set(cameraa,0,0,0);
 		Vec3.set(o.p,0,0,0);
-		bgm.currentTime=0;
-		bgm.play();
+		//bgm.currentTime=0;
+		//bgm.play();
 		break;
 	case Objman.MOVE:
 		if(o.t%40==0){
@@ -749,8 +745,8 @@ var oSystem=function(o,m,p){
 var objTitle= function(o,m,p){
 	switch(m){
 	case Objman.CREATE:
-		bgm.volume=0.1;
-		bgm.pause();
+		//bgm.volume=0.1;
+		//bgm.pause();
 		break;
 	case Objman.MOVE:
 		if(Util.keyflag[4] && !Util.keyflagOld[4]){
@@ -1002,6 +998,7 @@ var mainfunc=(function(){
 
 		Util.setFps(global_param.fps,mainfunc)
 		Util.fpsman()
+seBomb=document.getElementById("bb");
 	}
 
 
