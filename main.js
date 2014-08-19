@@ -13,6 +13,15 @@ var
 	;
 
 var score=0;
+var seBomb=document.createElement("audio");
+seBomb.src="./data/bomb.wav";
+var seBomb2=document.createElement("audio");
+seBomb2.src="./data/bomb.wav";
+var seBullet=document.createElement("audio");
+seBullet.src="./data/bullet.wav";
+var bgm=document.createElement("audio");
+bgm.src="./data/stage.mp3";
+bgm.loop=true;
 var scoreboard="";
 var elemScore=null;
 var scrollSpeed=-4;
@@ -129,6 +138,8 @@ var oBullet= function(o,m,p){
 			if(o.t<8){
 				o.ptn=1;
 				o.t=0;
+				seBullet.currentTime=0;
+				seBullet.play(1);
 			}
 			Vec3.sub(o.p,o.p,o.v);
 		}
@@ -210,6 +221,8 @@ var oExplosion2 = function(o,m,p){
 	switch(m){
 	case Objman.CREATE:
 		o.kind=0;
+		seBomb.currentTime=0;
+		seBomb.play();
 		break;
 	case Objman.MOVE:
 		o.v[2]+=0.3;
@@ -630,6 +643,8 @@ var oStage= function(o,m,p){
 		//Vec3.set(camerap,0,0,0);
 		//Vec3.set(cameraa,0,0,0);
 		Vec3.set(o.p,0,0,0);
+		bgm.currentTime=0;
+		bgm.play();
 		break;
 	case Objman.MOVE:
 		if(o.t%40==0){
@@ -734,6 +749,8 @@ var oSystem=function(o,m,p){
 var objTitle= function(o,m,p){
 	switch(m){
 	case Objman.CREATE:
+		bgm.volume=0.1;
+		bgm.pause();
 		break;
 	case Objman.MOVE:
 		if(Util.keyflag[4] && !Util.keyflagOld[4]){
@@ -864,11 +881,6 @@ var mainfunc=(function(){
 				scoreboard.push(obj);
 			}
 		});
-		//var form=document.createElement("form");
-		//document.getElementById("hid_id").value = global_param["id"];
-		//document.getElementById("hid_name").value =document.getElementById("name").value;
-		//document.getElementById("hid_score").value = score;
-		//form.submit();
 	}
 	ret.init=function(){
 		var cookie=document.cookie;
