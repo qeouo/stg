@@ -216,7 +216,6 @@ var oExplosion2 = function(o,m,p){
 	switch(m){
 	case Objman.CREATE:
 		o.kind=0;
-		seBomb.pause();
 		seBomb.currentTime=0;
 		seBomb.play();
 		break;
