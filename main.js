@@ -997,7 +997,6 @@ var mainfunc=(function(){
 
 		Util.setFps(global_param.fps,mainfunc)
 		Util.fpsman()
-seBomb=document.getElementById("bb");
 	}
 
 
