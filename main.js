@@ -17,6 +17,8 @@ var seBomb=document.createElement("audio");
 seBomb.src="./data/bomb.wav";
 var seBullet=document.createElement("audio");
 seBullet.src="./data/bullet.wav";
+var bgm=document.createElement("audio");
+bgm.src="./data/stage.mp3";
 var scoreboard="";
 var elemScore=null;
 var scrollSpeed=-4;
@@ -134,7 +136,7 @@ var oBullet= function(o,m,p){
 				o.ptn=1;
 				o.t=0;
 				seBullet.currentTime=0;
-				seBullet.play(1);
+				seBullet.play();
 			}
 			Vec3.sub(o.p,o.p,o.v);
 		}
@@ -216,7 +218,7 @@ var oExplosion2 = function(o,m,p){
 	switch(m){
 	case Objman.CREATE:
 		o.kind=0;
-		seBomb.currentTime=0;
+		seBomb.load();
 		seBomb.play();
 		break;
 	case Objman.MOVE:
@@ -638,8 +640,8 @@ var oStage= function(o,m,p){
 		//Vec3.set(camerap,0,0,0);
 		//Vec3.set(cameraa,0,0,0);
 		Vec3.set(o.p,0,0,0);
-		//bgm.currentTime=0;
-		//bgm.play();
+		bgm.currentTime=0;
+		bgm.play();
 		break;
 	case Objman.MOVE:
 		if(o.t%40==0){
@@ -744,8 +746,8 @@ var oSystem=function(o,m,p){
 var objTitle= function(o,m,p){
 	switch(m){
 	case Objman.CREATE:
-		//bgm.volume=0.1;
-		//bgm.pause();
+		bgm.volume=0.1;
+		bgm.pause();
 		break;
 	case Objman.MOVE:
 		if(Util.keyflag[4] && !Util.keyflagOld[4]){
