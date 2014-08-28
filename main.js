@@ -42,6 +42,10 @@ var fugo=function(v){
 var playSound=function(s){
 	//s.currentTime=0;
 	//s.play();
+	if (navigator.userAgent.match(/iPhone/i)
+		||navigator.userAgent.match(/iPod/i) ){
+		return;
+	}
 	s.load();
 	s.addEventListener("canplay",function(e){
 		s.play();
@@ -1287,8 +1291,7 @@ var oStage= function(o,m,p){
 		//Vec3.set(camerap,0,0,0);
 		//Vec3.set(cameraa,0,0,0);
 		Vec3.set(o.p,0,0,0);
-		bgm.currentTime=0;
-		bgm.play();
+		playSound(bgm);
 		count0id=-2;
 		count1id=-2;
 		count0=o
