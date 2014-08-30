@@ -13,15 +13,17 @@ var
 	,medalCount
 	,medalLevel
 	,font
+	,zanki=1
+	,sisa=0;
 	;
 
 var score=0;
 var seBomb=document.createElement("audio");
-seBomb.src="./data/bomb.wav";
+//seBomb.src="./data/bomb.wav";
 var seBullet=document.createElement("audio");
-seBullet.src="./data/bullet.wav";
+//seBullet.src="./data/bullet.wav";
 var bgm=document.createElement("audio");
-bgm.src="./data/stage.mp3";
+//bgm.src="./data/stage.mp3";
 var scoreboard="";
 var elemScore=null;
 var scrollSpeed=-4;
@@ -42,14 +44,18 @@ var fugo=function(v){
 var playSound=function(s){
 	//s.currentTime=0;
 	//s.play();
-	if (navigator.userAgent.match(/iPhone/i)
-		||navigator.userAgent.match(/iPod/i) ){
-		return;
-	}
-	s.load();
-	s.addEventListener("canplay",function(e){
-		s.play();
-	},false);
+//	if (navigator.userAgent.match(/iPhone/i)
+//		||navigator.userAgent.match(/iPod/i) ){
+//		return;
+//	}
+//	s.load();
+//	s.addEventListener("canplay",function(e){
+//		s.play();
+//	},false);
+}
+var setParent=function(child,parent){
+	child.parent=parent;
+	child.parentid=parent.id;
 }
 var argb=function(a,r,g,b){
 	return (a<<24) + (r<<16) + (g<<8) + b;
@@ -108,8 +114,9 @@ var drawText=function(str){
 }
 var drawFont=function(n){
 	var s=8/128;
-	var x=(n%16)*s;
-	var y=(n>>4)*s;
+	var x=(n%16)*s+0.3/128;
+	var y=(n>>4)*s+0.3/128;
+	s-=0.6/128;
 	ono3d.color=0x7fffffff;
 	ono3d.rf|=Ono3d.RF_TEXTURE;
 	ono3d.texture=font;
@@ -160,6 +167,7 @@ var defObj=function(o,m,p){
 				ono3d.loadIdentity();
 				ono3d.translate(-camerap[0],-camerap[1],-camerap[2]);
 				ono3d.rotate(-cameraa[1],0,1,0);
+				ono3d.rotate(-cameraa[0],1,0,0);
 				Mat43.dotMat43Vec3(o.hitarea,ono3d.transMat,o.p)
 				o.hitarea[0] = o.hitarea[0]*(75/o.hitarea[2]);
 				o.hitarea[1] = o.hitarea[1]*(75/o.hitarea[2]);
@@ -197,11 +205,11 @@ var oMedal = function(o,m,p){
 		break;
 	case Objman.MOVE:
 		if(o.t==1){
-			o.v[1]=0.5;
-			o.v[0]=-o.p[0]*0.001;
+			o.v[1]=1;
+			o.v[0]=-o.p[0]*0.002;
 		}
-		if(o.v[1]>-0.5){
-			o.v[1]-=0.02;
+		if(o.v[1]>-1){
+			o.v[1]-=0.04;
 		}
 		o.v[0]*=0.9;
 		if(o.p[1]<-100){
@@ -217,9 +225,45 @@ var oMedal = function(o,m,p){
 		o.hp=0;
 		break;
 	case Objman.DRAW:
+		ono3d.push();
 		ono3d.translate(o.p[0],o.p[1],o.p[2]+o.z);
 		ono3d.color=0x7fcccc00;
 		ono3d.scale(2+o.hp,3+o.hp,1);
+		ono3d.rotate(o.t*0.1,0,1,0);
+		drawRect();
+		ono3d.rotate(Math.PI,0,1,0);
+		drawRect();
+		ono3d.pop();
+		var str=""+(1<<(o.hp-1))*100
+		ono3d.color=0x7fffffff
+		ono3d.translate(o.p[0],o.p[1],o.p[2]+o.z-2);
+		ono3d.scale(2,2,1);
+		ono3d.translate(str.length,0,1);
+		drawText(str);
+
+	}
+	return defObj(o,m,p);
+};
+var oFlashJiki= function(o,m,p){
+	switch(m){
+	case Objman.CREATE:
+		o.z=-1;
+		break;
+	case Objman.MOVE:
+		if(o.t>40){
+			objman.deleteObj(o);
+		}
+		break;
+	case Objman.DRAW:
+		ono3d.translate(o.p[0],o.p[1],o.p[2]+o.z);
+		ono3d.color=0x7fff0000;
+		var s=1;
+		if(o.t<=10){
+			s=o.t
+		}else{
+			s=4*1/(o.t-10)
+		}
+		ono3d.scale(o.t,s,1);
 		drawRect();
 	}
 	return defObj(o,m,p);
@@ -361,7 +405,7 @@ var oBullet= function(o,m,p){
 	case Objman.CREATE:
 		o.hitarea[3]=2;
 		o.kind=Objman.T_BULLET;
-		o.z=0;
+		o.z=-1;
 		break;
 	case Objman.MOVE:
 		if(Vec3.len(o.p)>100){
@@ -408,6 +452,13 @@ var oShot= function(o,m,p){
 	case Objman.MOVE:
 		if(o.p[1]>100){
 			objman.deleteObj(o);
+		}
+		break;
+	case Objman.DELETE:
+		if(o.parent.fnc==oJiki){
+			if(o.parent.zandan<4){
+				o.parent.zandan++;
+			}
 		}
 		break;
 	case Objman.DRAW:
@@ -503,13 +554,15 @@ var oEnemies= function(o,m,p){
 			obj=createBullet(oSmallEnemy,o.p,o.a,4);
 			Vec3.set(obj.p2,o.p[0],o.p[1],o.p[2]);
 			Vec3.set(obj.p,-fugo(obj.p[0])*20,0,-40);
-			obj.parent=o;
+			setParent(obj,o);
 			Vec3.add(o.p,o.p,o.p2);
 		}
 		break;
 	case Objman.DELETE:
 		if(o.parent){
-			o.parent.hp--;
+			if(o.parent.id==o.parentid){
+				o.parent.hp--;
+			}
 		}
 		break;
 	case Objman.DRAW:
@@ -538,7 +591,9 @@ var oEnemy = function(o,m,p){
 		break;
 	case Objman.DELETE:
 		if(o.parent){
-			o.parent.hp--;
+			if(o.parent.id==o.parentid){
+				o.parent.hp--;
+			}
 		}
 		break;
 	case Objman.DRAW:
@@ -662,15 +717,15 @@ var oMiddleEnemy = function(o,m,p){
 var oBossSub= function(o,m,p){
 	switch(m){
 	case Objman.CREATE:
-		o.hp=20;
-		o.hitarea[3]=5;
+		o.hp=40;
+		o.hitarea[3]=15;
 		break;
 	case Objman.DESTROYED:
 		bure=20;
 		break;
 	case Objman.DRAW:
 		ono3d.color=0x7fcccccc;
-		ono3d.translate(o.p[0],o.p[1],o.p[2]);
+		ono3d.translate(o.p[0],o.p[1]-10,o.p[2]-0.5);
 		ono3d.scale(20,10,1);
 		drawRect();
 		break;
@@ -850,7 +905,18 @@ var oBoss= function(o,m,p){
 				Vec3.add(o.v,o.v,bufvec);
 			}
 		break; case 1:
+			var obj;
 			Vec3.set(o.v,Math.cos(o.t*0.02)*0.5,Math.sin(o.t*0.02*4)*0.5,0);
+			if(o.t%120<30){
+				if(o.t%10==0){
+					for(var i=-1;i<2;i++){
+						Vec3.set(bufvec,o.p[0]-16,o.p[1]-8,o.p[2]);
+						obj=createBullet(oBullet,bufvec,nerai(bufvec)-i*256,1.5);
+						Vec3.set(bufvec,o.p[0]+16,o.p[1]-8,o.p[2]);
+						obj=createBullet(oBullet,bufvec,nerai(bufvec)-i*256,1.5);
+					}
+				}
+			}
 			if(o.sub.id!=o.subid){
 				o.ptn=2;
 				o.t=0;
@@ -910,6 +976,13 @@ var oBoss= function(o,m,p){
 				o.t=0;
 			}
 		break;case 4:
+			Vec3.set(o.v,Math.cos(o.t*0.02)*0.3,Math.sin(o.t*0.02*4)*0.5,0);
+			Vec3.add(o.p2,o.v,o.p2);
+			if(o.t%60==0){
+				createBullet(oBullet,o.p,nerai(o.p),1);
+				createBullet(oBullet,o.p,nerai(o.p),1.5);
+				createBullet(oBullet,o.p,nerai(o.p),2);
+			}
 			if(o.t==1 || o.t==220){
 				for(var i=0;i<4;i++){
 					var obj=o.bit[i];
@@ -945,6 +1018,7 @@ var oBoss= function(o,m,p){
 			Vec3.mult(o.v,o.v,0.05);
 		break;case 5:
 			if(o.t==1){
+				Vec3.set(o.p2,0,150,0);
 				for(var i=0;i<4;i++){
 					var obj=o.bit[i];
 					if(!obj)continue;
@@ -976,12 +1050,19 @@ var oBoss= function(o,m,p){
 				for(var i=0;i<4;i++){
 					var obj=o.bit[i];
 					if(!obj)continue;
-					obj.p2[2]=0;
-					obj.p2[1]=150;
+					obj.p2[0]=-rnd2()*50;
+					obj.p2[1]=-rnd2()*50;
+					obj.p2[2]=-50;
 				}
 			}
 			if(o.t==100){
 				Vec3.set(o.p2,0,50,0);
+				for(var i=0;i<4;i++){
+					var obj=o.bit[i];
+					if(!obj)continue;
+					obj.p2[2]=0;
+					obj.p2[1]=150;
+				}
 			}
 			if(o.t==160){
 				for(var i=0;i<4;i++){
@@ -1003,7 +1084,7 @@ var oBoss= function(o,m,p){
 		break;}
 
 		if(o.sub){
-			Vec3.set(o.sub.p,o.p[0],o.p[1]-10,o.p[2]-1);
+			Vec3.set(o.sub.p,o.p[0],o.p[1],o.p[2]);
 		}
 		if(o.ptn>=2){
 			Vec3.sub(o.v,o.p2,o.p);
@@ -1012,9 +1093,18 @@ var oBoss= function(o,m,p){
 		break;
 	case Objman.DESTROYED:
 		bure=20;
+		objman.createObj(oClear);
+		for(var i=0;i<4;i++){
+			var obj=o.bit[i];
+			if(!obj)continue;
+			objman.deleteObj(obj);
+		}
+		for(var i=0;i<8;i++){
+			var obj=objman.createObj(oMedal);
+			Vec3.set(obj.p,o.p[0]+rnd2()*25,o.p[1]+rnd2()*10,o.p[2]);
+		}
 		break;
 	case Objman.DELETE:
-		pSystem.ptn=1;
 		break;
 	case Objman.DRAW:
 		ono3d.color=0x7f0099ff;
@@ -1050,6 +1140,7 @@ var oSmoke = function(o,m,p){
 		var s=o.t/40;
 		ono3d.color=argb(0x7f-(0x7f*s),0x66,0x33,0x00);
 		ono3d.rotate(-cameraa[1],0,1,0);
+		ono3d.rotate(-cameraa[0],1,0,0);
 		ono3d.translate(o.p[0],o.p[1],o.p[2]);
 		ono3d.rotate(s+o.a*0.1,0,0,1);
 		ono3d.scale(2,2,1);
@@ -1099,6 +1190,7 @@ var oTank = function(o,m,p){
 				ono3d.loadIdentity();
 				ono3d.translate(-camerap[0],-camerap[1],-camerap[2]);
 				ono3d.rotate(-cameraa[1],0,1,0);
+				ono3d.rotate(-cameraa[0],1,0,0);
 				Mat43.dotMat43Vec3(bufvec,ono3d.transMat,o.p)
 				var obj=createBullet(oCannon,bufvec,nerai(bufvec),3);
 				Vec3.set(obj.p2,pJiki.p[0],pJiki.p[1],pJiki.p[2]-10);
@@ -1132,6 +1224,7 @@ var oTank = function(o,m,p){
 		}
 		ono3d.color=argb(0x7f,0x33*ss,0x99*ss,0x33*ss);
 		ono3d.rotate(-cameraa[1],0,1,0);
+		ono3d.rotate(-cameraa[0],1,0,0);
 		ono3d.translate(o.p[0],o.p[1],o.p[2]+(o.t&1)*2);
 		ono3d.push();
 		ono3d.rotate(r,0,0,1);
@@ -1160,17 +1253,55 @@ var oTank = function(o,m,p){
 var pJiki
 ,pSystem
 	;
+var oClear=function(o,m,p){
+	switch(m){
+	case Objman.MOVE:
+		if(o.t>=600){
+			objman.deleteObj(o);
+			pSystem.ptn=1;
+		}
+		break;
+	case Objman.DRAW:
+		ono3d.loadIdentity();
+		ono3d.translate(sisa,0,0);
+		ono3d.scale(2,2,1);
+		ono3d.translate(4,0,60);
+		drawText("CLEAR");
+		break;
+	}
+}
+var oGameOver=function(o,m,p){
+	switch(m){
+	case Objman.MOVE:
+		if(o.t>=120){
+			objman.deleteObj(o);
+			pSystem.ptn=1;
+		}
+		break;
+	case Objman.DRAW:
+		ono3d.loadIdentity();
+		ono3d.translate(sisa,0,0);
+		ono3d.scale(2,2,1);
+		ono3d.translate(8,0,60);
+		drawText("GAME OVER");
+		break;
+	}
+}
 var oJiki=function(o,m,p){
 	switch(m){
 	case Objman.CREATE:
 		o.z=3
 		o.kind=Objman.T_JIKI;
 		o.hitarea[3]=2;
+		pJiki=o;
+		Vec3.set(o.p,0,-100,0);
+		o.zandan=4;
+		o.shotdelay=0;
+
 		break;
 	case Objman.MOVE:
 		if(o.ptn==0){
 			if(o.t==1){
-				o.p[1]=-60;
 				Vec3.set(o.v,0,0,0);
 			}
 
@@ -1199,24 +1330,45 @@ var oJiki=function(o,m,p){
 				o.v[2]=0;
 				Vec3.mult(o.v,o.v,-0.2);
 			}
+			if(o.p[0]*o.p[0]>50*50){
+				o.p[0]=fugo(o.p[0])*50;
+			}
+			if(o.p[1]*o.p[1]>70*70){
+				o.p[1]=fugo(o.p[1])*70;
+			}
 
-			if(o.t%8==0 && Util.keyflag[4]){
+
+			if(o.shotdelay<=0 && o.zandan>0 && Util.keyflag[4]){
+				o.zandan--;
+				o.shotdelay=4;
 				var obj=createBullet(oShot,o.p,1024,3);
 				obj.p[2]+=0.1
+				setParent(obj,o);
+			}
+			if(o.shotdelay>0){
+				o.shotdelay--;
 			}
 		}
+		camerap[0]=pJiki.p[0]*0.25;
+		cameraa[1]=pJiki.p[0]*0.01;
 		break;
 	case Objman.HIT:
 		if(p.fnc==oMedal){
 			return;
 		}
-		o.ptn=0;
-		o.t=0;
-		o.p[1]=-50;
-		if(o.hp==1){
-			pSystem.ptn=1;
+		
+		break;
+	case Objman.DESTROYED:
+		createBullet(oFlashJiki,o.p,0,0);
+		if(zanki==1){
+			objman.createObj(oGameOver);
+		}else{
+			zanki--;
+			var obj=objman.createObj(oJiki);
+			obj.p[0]=o.p[0]
 		}
 		break;
+
 	case Objman.DRAW:
 		if(o.kind == Objman.T_NONE){
 			if(o.t&2){
@@ -1269,6 +1421,7 @@ var objTree= function(o,m,p){
 	case Objman.DRAW:
 		ono3d.color=0x7f663300;
 		ono3d.rotate(-cameraa[1],0,1,0);
+		ono3d.rotate(-cameraa[0],1,0,0);
 		ono3d.translate(o.p[0],o.p[1],o.p[2]);
 		ono3d.scale(8,8,1);
 		drawRect();
@@ -1296,11 +1449,14 @@ var oStage= function(o,m,p){
 		count1id=-2;
 		count0=o
 		count1=o
-		//o.ptn=5;
+	//	o.ptn=6;
 		o.t=0;
+		o.p[1]=0;
+		cameraa[0]=0;
 		break;
 	case Objman.MOVE:
 		var cnt=0;
+		o.p[1]++;
 		if(o.ptn==cnt++){
 			if(o.t==1){
 			}
@@ -1315,12 +1471,12 @@ var oStage= function(o,m,p){
 						if(o.t==20){
 							obj=objman.createObj(oEnemies);
 							Vec3.set(obj.p,-20,40,0);
-							obj.parent=o;
+							setParent(obj,o);
 						}
 						if(o.t==60){
 							obj=objman.createObj(oEnemies);
 							Vec3.set(obj.p,20,40,0);
-							obj.parent=o;
+							setParent(obj,o);
 						}
 						break;
 					}
@@ -1346,12 +1502,12 @@ var oStage= function(o,m,p){
 							obj=objman.createObj(oMiddleEnemy);
 							Vec3.set(obj.p2,o.p[0],50,0);
 							Vec3.set(obj.p,obj.p[0],0,30);
-							obj.parent=o;
+							setParent(obj,o);
 						}
 						if(o.t==60){
 							obj=objman.createObj(oEnemies);
 							Vec3.set(obj.p,-o.p[0],60,0);
-							obj.parent=o;
+							setParent(obj,o);
 						}
 						break;
 					}
@@ -1404,7 +1560,7 @@ var oStage= function(o,m,p){
 							obj=objman.createObj(oTank);
 							Vec3.set(obj.p2,rnd2()*40,80+rnd2()*20,90);
 							Vec3.set(obj.p,-fugo(obj.p2[0])*100,obj.p2[1],obj.p2[2]);
-							obj.parent=o;
+							setParent(obj,o);
 						}
 						break;
 					}
@@ -1424,10 +1580,10 @@ var oStage= function(o,m,p){
 						if(o.t==60){
 							obj=objman.createObj(oEnemies);
 							Vec3.set(obj.p,30,70,0);
-							obj.parent=o;
+							setParent(obj,o);
 							obj=objman.createObj(oEnemies);
 							Vec3.set(obj.p,-30,70,0);
-							obj.parent=o;
+							setParent(obj,o);
 						}
 						break;
 					}
@@ -1435,6 +1591,7 @@ var oStage= function(o,m,p){
 				});
 				count1id=count1.id;
 			}
+
 			if(o.t>=1200){
 				o.t=0;
 				o.ptn++;
@@ -1445,6 +1602,9 @@ var oStage= function(o,m,p){
 				Vec3.set(obj.p2,rnd2()*60,60+rnd2()*60,90);
 				Vec3.set(obj.p,-fugo(obj.p2[0])*100,obj.p2[1],obj.p2[2]);
 			}
+//			if(o.t>=300){
+//				cameraa[0]-=0.002;
+//			}
 			if(o.t>=600){
 				o.ptn++;
 				o.t=0;
@@ -1473,22 +1633,23 @@ var oStage= function(o,m,p){
 				Vec3.set(obj.p,obj.p[0],0,30);
 			}
 		}
-			if(o.t%40==0){
-				var obj;
-				for(var i=1;i<4;i++){
-					obj=objman.createObj(objTree);
-					Vec3.set(obj.p,-20-40*i,150,70);
-					Vec3.set(obj.v,0,scrollSpeed,0);
-					obj=objman.createObj(objTree);
-					Vec3.set(obj.p,20+40*i,150,70);
-					Vec3.set(obj.v,0,scrollSpeed,0);
-				}
+		if(o.t%40==0){
+			var obj;
+			for(var i=1;i<4;i++){
+				obj=objman.createObj(objTree);
+				Vec3.set(obj.p,-20-40*i,150,70);
+				Vec3.set(obj.v,0,scrollSpeed,0);
+				obj=objman.createObj(objTree);
+				Vec3.set(obj.p,20+40*i,150,70);
+				Vec3.set(obj.v,0,scrollSpeed,0);
 			}
+		}
 		break;
 	case Objman.DRAW:
 		ono3d.rotate(-cameraa[1],0,1,0);
+		ono3d.rotate(-cameraa[0],1,0,0);
 		ono3d.translate(0,0,100);
-		ono3d.translate(0,o.t*scrollSpeed%64,0);
+		ono3d.translate(0,o.p[1]*scrollSpeed%64,0);
 		ono3d.scale(160,16,1);
 		ono3d.translate(0,2*10,0);
 		for(i=0;i<10;i++){
@@ -1519,16 +1680,13 @@ var oSystem=function(o,m,p){
 	case Objman.CREATE:
 		o.z=-10;
 		pStage=objman.createObj(oStage);
-		pJiki=objman.createObj(oJiki);
-		Vec3.set(pJiki.p,0,-50,0);
-		pJiki.hp=3;
+		objman.createObj(oJiki);
+		zanki=3;
 		score=0;
 		medalCount=0;
 		medalLevel=0;
 		break;
 	case Objman.MOVE:
-		camerap[0]=pJiki.p[0]*0.25;
-		cameraa[1]=pJiki.p[0]*0.01;
 		if(bure>0){
 			bure--;
 			Vec3.set(burep,rnd2(),rnd2(),rnd2());
@@ -1550,14 +1708,16 @@ var oSystem=function(o,m,p){
 		}
 		break;
 	case Objman.DRAW:
-		ono3d.translate(camerap[0],camerap[1],camerap[2])
+		//ono3d.translate(camerap[0],camerap[1],camerap[2])
+		ono3d.loadIdentity();
+		ono3d.translate(sisa,0,0);
 		ono3d.scale(2,2,1);
 		ono3d.translate(15,30,70);
 		var str="        "+score;
 		drawText(str.substr(str.length-6,6));
 		ono3d.translate(0,-5,0);
 		ono3d.color=0x7f00ff00;
-		for(var i=1;i<pJiki.hp;i++){
+		for(var i=1;i<zanki;i++){
 			drawRect();
 			ono3d.translate(-3,0,0);
 		}
@@ -1618,11 +1778,42 @@ var mainfunc=(function(){
 		Ono3d.setDrawMethod(global_param.drawmethod)
 
 		ono3d.setPers(9/16*viewscale,1*viewscale);
-		ono3d.clear()
-		ono3d.loadIdentity()
-		ono3d.translate(-burep[0],-burep[1],-burep[2])
+
 		var objs=objman.objs;
 		var obj;
+		if(global_param.sisa=="cross"){
+			sisa=4;
+		}else if(global_param.sisa=="parallel"){
+			sisa=-4;
+		}else{
+			sisa=0;
+		}
+		if(sisa!=0){
+			ono3d.clear()
+			ono3d.loadIdentity()
+			ono3d.translate(-burep[0]+sisa,-burep[1],-burep[2])
+			for(i = Objman.OBJ_NUM; i--;){
+				obj=objs[i]
+				if(!obj.flg)continue
+				ono3d.push();
+				obj.fnc(obj,Objman.DRAW,0)
+				ono3d.pop();
+			}
+			ono3d.render(ctxr);
+			if(global_param.drawmethod==9){
+				ctxr.putImageData(imagedata,0,0);
+			}
+		}
+		if(global_param.sisa=="cross"){
+			sisa=-4;
+		}else if(global_param.sisa=="parallel"){
+			sisa=4;
+		}else{
+			sisa=0;
+		}
+		ono3d.clear()
+		ono3d.loadIdentity()
+		ono3d.translate(-burep[0]+sisa,-burep[1],-burep[2])
 		for(i = Objman.OBJ_NUM; i--;){
 			obj=objs[i]
 			if(!obj.flg)continue
@@ -1631,22 +1822,10 @@ var mainfunc=(function(){
 			ono3d.pop();
 		}
 		ono3d.render(Util.ctx);
-		Util.ctx.putImageData(imagedata,0,0);
+		if(global_param.drawmethod==9){
+			Util.ctx.putImageData(imagedata,0,0);
+		}
 
-//		ono3d.clear()
-//		ono3d.loadIdentity()
-//		ono3d.translate(-burep[0]-4,-burep[1],-burep[2])
-//		var objs=objman.objs;
-//		var obj;
-//		for(i = Objman.OBJ_NUM; i--;){
-//			obj=objs[i]
-//			if(!obj.flg)continue
-//			ono3d.push();
-//			obj.fnc(obj,Objman.DRAW,0)
-//			ono3d.pop();
-//		}
-//		ono3d.render(Util.ctx);
-//		ctxr.putImageData(imagedata,0,0);
 
 		mseccount += (new Date() - nowTime)
 		framecount++
@@ -1667,40 +1846,6 @@ var mainfunc=(function(){
 		if(objcube)objman.deleteObj(objcube)
 	}
 
-	var post=function(arr){
-		document.cookie="nm="+document.getElementById("name").value;
-		Util.load("./score.php"
-			+"?id="+global_param["id"]
-			+"&name=" +document.getElementById("name").value
-			+"&score="+score
-			,function(data){
-			var arr=data.split("\n");
-			scoreboard= new Array();
-			for(var i=0;i<arr.length;i++){
-				var arr2=arr[i].split(",");
-				if(arr2.length<=2){continue};
-				var obj={}
-				obj.id=arr2[0];
-				obj.name=arr2[1];
-				obj.score=arr2[2];
-				scoreboard.push(obj);
-			}
-			var scorestr= "";
-			 scorestr= "<BR>ONLINE RANKING<BR>";
-			for(i=0;i<scoreboard.length;i++){
-				var s=scoreboard[i];
-				if(s.id==global_param["id"]){
-					scorestr+="<span style='color:red;font-weight:bold;'>";
-					scorestr+=s.name +":" + s.score; 
-				scorestr+="</span>";
-				}else{
-					scorestr+=s.name +":" + s.score; 
-				}
-				scorestr+="<br>"; 
-			}
-		elemScore.innerHTML=scorestr;
-		});
-	}
 	ret.init=function(){
 		var cookie=document.cookie;
 		var args;
@@ -1751,8 +1896,8 @@ var mainfunc=(function(){
 			}
 		}
 		cons = document.getElementById("cons")
-		canvasr=document.getElementById("maincanvas_R");
 		elemScore=document.getElementById("score");
+		canvasr=document.getElementById("maincanvasR");
 		ctxr=canvasr.getContext("2d");
 
 		loadScore();
@@ -1760,20 +1905,26 @@ var mainfunc=(function(){
 		objman= new Objman()
 		ono3d = new Ono3d()
 		O3o.setOno3d(ono3d)
-		ono3d.init(Util.canvas,Util.ctx)
-		ono3d.rendercanvas=Util.canvas;
 
 		camerap[2]=-75;
 		viewscale=2;
-		Ono3d.setDrawMethod(global_param.drawmethod)
-		if(global_param.drawmethod==3){
-			document.getElementById("maincanvas2").style.display="inline";
-			document.getElementById("maincanvas").style.display="none";
+		if(global_param.sisa){
+			var width=document.getElementById("maincanvas").width;
+			document.getElementById("rittai").style.display="inline";
+			document.getElementById("maincanvas").width=width>>1;
+			document.getElementById("maincanvasR").width=width>>1;
+			Util.ctx=document.getElementById("maincanvas").getContext("2d");
+			ctxr=document.getElementById("maincanvasR").getContext("2d");
 		}else{
-			document.getElementById("maincanvas").style.display="inline";
-			document.getElementById("maincanvas2").style.display="none";
+			document.getElementById("rittai").style.display="none";
 		}
-		//model=O3o.load("./data/dice.mqo");
+		//imagedata = Util.ctx.createImageData(Util.canvas.width,Util.canvas.height)
+		imagedata = Util.ctx.createImageData(Util.canvas.width*2,Util.canvas.height)
+		ono3d.targetImageData=imagedata;
+		ono3d.init(Util.canvas,Util.ctx)
+		ono3d.rendercanvas=Util.canvas;
+		Ono3d.setDrawMethod(global_param.drawmethod);
+
 		font=Util.loadImage("./data/font.png");
 		
 		var light = new ono3d.LightSource()
@@ -1790,8 +1941,6 @@ var mainfunc=(function(){
 		light.power = 0.4
 		ono3d.lightSources.push(light)
 
-		imagedata = Util.ctx.createImageData(300,400)
-		ono3d.targetImageData=imagedata;
 
 		//ono3d.backTexture=back
 	
@@ -1816,13 +1965,18 @@ var mainfunc=(function(){
 })()
 var jsonobj;
 var loadScore=function(id,name,score){
+	document.cookie="nm="+document.getElementById("name").value;
 
 	var url="http://qeouo.5com.info/stg/score.php?"+ new Date()
 	if(id){
 		url+="&id="+id;
 	}
 	if(name){
-		url+="&name="+name;
+		name=name.replace(/</g,"&lt;");
+		name=name.replace(/>/g,"&gt;");
+		name=name.replace(/\"/g,"&quot;");
+		name=name.replace(/'/g,"&lsquo;");
+		url+="&name="+encodeURIComponent(name);
 	}
 	if(score){
 		url+="&score="+score;
@@ -1835,21 +1989,20 @@ var loadScore=function(id,name,score){
 }
 var scoreboard=function(v){
 	var scorestr= "";
-	scorestr= "<BR>ONLINE RANKING<BR>";
+	scorestr= "<BR>SCORE BOARD<BR>";
 	for(i=0;i<v.length;i++){
 		var s=v[i];
 		if(s.id==global_param["id"]){
 			scorestr+="<span style='color:red;font-weight:bold;'>";
-			scorestr+=s.name +":" + s.score; 
-		scorestr+="</span>";
 		}else{
-			scorestr+=s.name +":" + s.score; 
+			scorestr+="<span>";
 		}
+		scorestr+=""+(i+1) + "_" + decodeURIComponent(s.name) +"_" + s.score; 
+		scorestr+="</span>";
 		scorestr+="<br>"; 
 	}
 	var elemScore=document.getElementById("score");
 	elemScore.innerHTML=scorestr;
 
-	console.log("HOGE");
 	document.head.removeChild(jsonobj);
 };
