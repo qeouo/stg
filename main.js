@@ -201,7 +201,7 @@ var oMedal = function(o,m,p){
 		o.hitarea[3]=3;
 		o.hp=medalLevel+1;
 		o.kind=Objman.T_BULLET;
-		o.hitarea[3]=o.hp+2;
+		o.hitarea[3]=o.hp+3;
 		break;
 	case Objman.MOVE:
 		if(o.t==1){
