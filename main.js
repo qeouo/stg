@@ -1974,12 +1974,12 @@ var loadScore=function(id,name,score){
 		name=name.replace(/,/g,"");
 		name = encodeURIComponent(name);
 		url+="&name="+name;
+		document.cookie="nm="+name;
 	}
 	if(score){
 		url+="&score="+score;
 	}
 
-	document.cookie="nm="+name;
 	jsonobj= document.createElement("script");
 	jsonobj.type="text/javascript";
 	jsonobj.src=url;
