@@ -889,8 +889,13 @@ var oBoss= function(o,m,p){
 		o.sub=objman.createObj(oBossSub);
 		o.subid=o.sub.id;
 		o.bit=new Array(4);
+		o.bitid=new Array(4);
 		break;
 	case Objman.MOVE:
+		for(i=0;i<4;i++){
+			if(o.bit[i]==null)continue;
+			if(o.bit[i].id!=o.bitid[i])o.bit[i]=null;
+		}
 		switch(o.ptn){
 		case 0:
 			Vec3.mult(o.v,o.v,0.4);
@@ -928,6 +933,7 @@ var oBoss= function(o,m,p){
 			}
 			if(o.t%30==0 && o.t<130){
 				o.bit[(o.t/30|0)-1]=createBullet(oBit,o.p,1024,3);
+				o.bitid[(o.t/30|0)-1]=o.bit[(o.t/30|0)-1].id
 			}
 			if(o.t>130){
 				o.ptn=3;
@@ -957,6 +963,7 @@ var oBoss= function(o,m,p){
 					if(!obj)continue;
 					obj.ptn=1;
 					obj.t=0;
+					obj.kind=Objman.T_ENEMY;
 				}
 			}
 
@@ -1024,6 +1031,7 @@ var oBoss= function(o,m,p){
 					if(!obj)continue;
 					obj.ptn=4;
 					obj.t=0;
+					obj.kind=Objman.T_NONE;
 				}
 			}
 			if(o.t==300){
@@ -1096,6 +1104,8 @@ var oBoss= function(o,m,p){
 		objman.createObj(oClear);
 		for(var i=0;i<4;i++){
 			var obj=o.bit[i];
+			if(!obj)continue;
+			if(o.bit[i].id!=o.bitid[i])o.bit[i]=null;
 			if(!obj)continue;
 			objman.deleteObj(obj);
 		}
