@@ -337,8 +337,8 @@ var oCannon= function(o,m,p){
 			createBullet(oFlash2,o.p,0,0);
 		}
 		if(o.p[2]<=0){
-			objman.deleteObj(o);
 			createBullet(oShogeki,o.p,0,0);
+			objman.deleteObj(o);
 		}
 		o.v[2]=(o.p2[2]-o.p[2])*0.05;
 		break;
@@ -1859,7 +1859,7 @@ var mainfunc=(function(){
 					if(!isNaN(arg[1]) && arg[1]!=""){
 						global_param[arg[0]] = +arg[1]
 					}else{
-						global_param[arg[0]] = arg[1]
+						global_param[arg[0]] = decodeURIComponent(arg[1]) ;
 					}
 				}else{
 					global_param["no"]=arg[0]
@@ -1965,29 +1965,29 @@ var mainfunc=(function(){
 })()
 var jsonobj;
 var loadScore=function(id,name,score){
-	document.cookie="nm="+document.getElementById("name").value;
 
 	var url="http://qeouo.5com.info/stg/score.php?"+ new Date()
 	if(id){
 		url+="&id="+id;
 	}
 	if(name){
-		name=name.replace(/</g,"&lt;");
-		name=name.replace(/>/g,"&gt;");
-		name=name.replace(/\"/g,"&quot;");
-		name=name.replace(/'/g,"&lsquo;");
-		url+="&name="+encodeURIComponent(name);
+		name=name.replace(/,/g,"");
+		name = encodeURIComponent(name);
+		url+="&name="+name;
 	}
 	if(score){
 		url+="&score="+score;
 	}
 
+	document.cookie="nm="+name;
 	jsonobj= document.createElement("script");
 	jsonobj.type="text/javascript";
 	jsonobj.src=url;
+
 	document.head.appendChild(jsonobj);
 }
 var scoreboard=function(v){
+	var name;
 	var scorestr= "";
 	scorestr= "<BR>SCORE BOARD<BR>";
 	for(i=0;i<v.length;i++){
@@ -1997,7 +1997,12 @@ var scoreboard=function(v){
 		}else{
 			scorestr+="<span>";
 		}
-		scorestr+=""+(i+1) + "_" + decodeURIComponent(s.name) +"_" + s.score; 
+		name=decodeURIComponent(s.name) ;
+		name=name.replace(/</g,"&lt;");
+		name=name.replace(/>/g,"&gt;");
+		name=name.replace(/\"/g,"&quot;");
+		name=name.replace(/'/g,"&lsquo;");
+		scorestr+=""+(i+1) + "_" + name+"_" + s.score; 
 		scorestr+="</span>";
 		scorestr+="<br>"; 
 	}

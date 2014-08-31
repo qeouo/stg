@@ -5,6 +5,7 @@
   }
   if(isset($_GET['name'])) {
       $name = $_GET['name'];
+	  	
   }
   if(isset($_GET['score'])) {
       $score = $_GET['score'];

@@ -15,9 +15,9 @@ if (!document.createElement('canvas').getContext) { location.href="error.html" }
 </script>
 <style type="text/css"><!--
 html{height:100%;margin:0px;padding:0px;}
-body{height:90%;margin:0px;padding:0px;}
+body{height:90%;margin:0px;padding:0px;color:white}
 canvas{border:solid 1px white;}
-div{color:white;}
+a,a.visited{color:white;}
 --></style>
 
 </head>
@@ -66,13 +66,14 @@ var onloadfunc=function(event){
 	</canvas>
 </div>
 <div style="float:left;width:auto;align:left;">
-<div id="cons" style="color:gray;"></div>
-	NAME ENTRY<input type="text" id="name" value="HOGE"><br>
+<div id="cons"></div>
+	NAME ENTRY<input type="text" id="name" value="JSSTG" maxlength="16"><br>
 	<span id="score"></span>
 </div>
 </div>
-<form action="./score.php"  method="GET" id="frm" accept-charset="utf-8">
-</form>
+<a href="./?fps=60">60fps</a>
+<a href="./?sisa=cross">交差法</a>
+<a href="./?sisa=parallel">平行法</a>
 </body>
 </html>
 
