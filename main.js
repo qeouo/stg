@@ -392,11 +392,11 @@ var oBullet3D= function(o,m,p){
 		ono3d.scale(2,1.25,1);
 		ono3d.rotate(Math.PI*0.25,0,0,1);
 		drawRect();
-		ono3d.color= argbz(0x7f,0x0,0x0,0xf0,o.p[2]);
-		var ss=1.3;
-		ono3d.translate(0,0,0.01);
-		ono3d.scale(ss,ss,ss);
-		drawRect();
+//		ono3d.color= argbz(0x7f,0x0,0x0,0xf0,o.p[2]);
+//		var ss=1.3;
+//		ono3d.translate(0,0,0.01);
+//		ono3d.scale(ss,ss,ss);
+//		drawRect();
 	}
 	return defObj(o,m,p);
 };
@@ -434,7 +434,7 @@ var oBullet= function(o,m,p){
 		ono3d.scale(2,1.25,1);
 		ono3d.rotate(Math.PI*0.25,0,0,1);
 		drawRect();
-		ono3d.color= argb(0x7f,0x0,0x0,0xf0);
+		ono3d.color= argb(0x7f,0x0,0x0,0x30);
 		var ss=1.3;
 		ono3d.translate(0,0,0.01);
 		ono3d.scale(ss,ss,ss);
@@ -824,7 +824,7 @@ var oBit= function(o,m,p){
 				ono3d.loadIdentity();
 				ono3d.translate(pJiki.p[0],pJiki.p[1],pJiki.p[2]);
 				ono3d.rotate(rnd()*2*Math.PI,0,0,1);
-				ono3d.translate(40,0,0);
+				ono3d.translate(60,0,0);
 				Vec3.set(bufvec,0,0,0);
 				Mat43.dotMat43Vec3(o.nerai,ono3d.transMat,bufvec)
 				Vec3.set(o.nv,0,0,0);
@@ -835,11 +835,11 @@ var oBit= function(o,m,p){
 				o.a2=Math.atan2(bufvec[2],Vec2.len(bufvec));
 				if(o.t%10==0){
 					Vec3.normalize(bufvec,bufvec);
-					createPerticle(oBullet3D,o.p,bufvec,0,3);
+					createPerticle(oBullet3D,o.p,bufvec,0,2);
 				}
 				Vec3.sub(bufvec,pJiki.p,o.nerai);
 				Vec3.normalize(bufvec,bufvec);
-				Vec3.mult(bufvec,bufvec,0.08);
+				Vec3.mult(bufvec,bufvec,0.05);
 				Vec3.add(o.nv,o.nv,bufvec);
 				//Vec3.normalize(o.nv,o.nv);
 				Vec3.mult(o.nv,o.nv,0.98);
@@ -1659,14 +1659,14 @@ var oStage= function(o,m,p){
 		ono3d.rotate(-cameraa[1],0,1,0);
 		ono3d.rotate(-cameraa[0],1,0,0);
 		ono3d.translate(0,0,100);
-		ono3d.translate(0,o.p[1]*scrollSpeed%64,0);
-		ono3d.scale(160,16,1);
-		ono3d.translate(0,2*10,0);
-		for(i=0;i<10;i++){
-			ono3d.color=0x7f336633;
+		ono3d.translate(0,o.p[1]*scrollSpeed%128,0);
+		ono3d.scale(160,32,1);
+		ono3d.translate(0,12,0);
+		for(i=0;i<5;i++){
+			ono3d.color=0x7f225522;
 			ono3d.translate(0,-2,0);
 			drawRect();
-			ono3d.color=0x7f225522;
+			ono3d.color=0x7f336633;
 			ono3d.translate(0,-2,0);
 			drawRect();
 		}
