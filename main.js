@@ -1858,6 +1858,7 @@ var mainfunc=(function(){
 
 	ret.init=function(){
 		var cookie=document.cookie;
+		document.cookie="path="+location.pathname;
 		var args;
 		var i;
 		if(cookie != null){
